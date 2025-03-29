@@ -1,0 +1,23 @@
+[package]
+name = "fx-mistral"
+version = "0.0.1"
+edition = "2024"
+authors = ["Michael Fuchs <michael.fuchs@fumix.de>"]
+description = "A library to leverage the Mistral API for OCR and data extraction from PDFs."
+license = "MIT"
+repository = "https://github.com/your-username/your-repository"
+documentation = "https://docs.rs/fx-mistral"
+homepage = "https://github.com/your-username/your-repository"
+keywords = ["OCR", "PDF", "data_extraction", "Mistral"]
+categories = ["text-processing"]
+readme = "README.md"
+
+[dependencies]
+serde = { version = "1.0.218", features = ["derive"] }
+serde_json = "1.0.140"
+
+reqwest = { version = "0.12.13", features = ["json", "multipart"] }
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
+dotenvy = "0.15.7"
