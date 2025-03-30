@@ -1,5 +1,6 @@
 use reqwest::Client;
 use crate::chat::ChatClient;
+use crate::ocr::OcrClient;
 
 mod ocr;
 pub mod chat;
@@ -26,6 +27,10 @@ impl MistralClient {
 
     pub fn chat_client(&self, model: &str, temperature: f64) -> ChatClient {
         ChatClient::new(self, model, temperature)
+    }
+
+    pub fn ocr_client(&self, model: &str) -> OcrClient {
+        OcrClient::new(&self, model)
     }
 
 }
