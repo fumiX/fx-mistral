@@ -39,21 +39,21 @@ in German.
     "issuer_name": ""
   }
   ```
-  - User prompt (with URL to the uploaded PDF file):
-    ```text
-    Extrahiere die folgenden Daten als Felder: * Rechnungsnummer: Rechnungsnummer, Belegnummer. * Gesamtbetrag/Summe: 
-    normalerweise als Summe, Total, Brutto, Zahlbetrag bezeichnet, der den tatsächlich in Rechnung gestellten Betrag 
-    einschließlich Steuern enthält. 
-    * Steuer: Mehrwertsteuer oder VAT als Betrag in der Währung. 
-    * Währung: als 'EUR' oder 'USD'. 
-    * Rechnungsdatum. Nur das Datum, ohne Uhrzeit. 
-    * Ausstellername: Das Unternehmen, das die Rechnung ausstellt. Das Rechnungsdokument wird als URL bereitgestellt. 
-    Das Rechnungsdokument wird als URL bereitgestellt. Beispiel einer Rechnung:
-      Rechnungsnummer: 12345
-      Summe: €100,00
-      Rechnungsdatum: 18.02.2025
-      Ausstellername: Beispiel GmbH
-    ```
+- User prompt (with URL to the uploaded PDF file):
+  ```text
+  Extrahiere die folgenden Daten als Felder: * Rechnungsnummer: Rechnungsnummer, Belegnummer. * Gesamtbetrag/Summe: 
+  normalerweise als Summe, Total, Brutto, Zahlbetrag bezeichnet, der den tatsächlich in Rechnung gestellten Betrag 
+  einschließlich Steuern enthält. 
+  * Steuer: Mehrwertsteuer oder VAT als Betrag in der Währung. 
+  * Währung: als 'EUR' oder 'USD'. 
+  * Rechnungsdatum. Nur das Datum, ohne Uhrzeit. 
+  * Ausstellername: Das Unternehmen, das die Rechnung ausstellt. Das Rechnungsdokument wird als URL bereitgestellt. 
+  Das Rechnungsdokument wird als URL bereitgestellt. Beispiel einer Rechnung:
+    Rechnungsnummer: 12345
+    Summe: €100,00
+    Rechnungsdatum: 18.02.2025
+    Ausstellername: Beispiel GmbH
+  ```
 
 ### .env
 

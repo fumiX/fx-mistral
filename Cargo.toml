@@ -5,10 +5,10 @@ edition = "2024"
 authors = ["Michael Fuchs <michael.fuchs@fumix.de>"]
 description = "A library to leverage the Mistral API for OCR and data extraction from PDFs."
 license = "MIT"
-repository = "https://github.com/your-username/your-repository"
-documentation = "https://docs.rs/fx-mistral"
-homepage = "https://github.com/your-username/your-repository"
-keywords = ["OCR", "PDF", "data_extraction", "Mistral"]
+repository = "https://github.com/fumix/fx-mistral"
+# documentation = "https://docs.rs/fx-mistral"
+homepage = "https://github.com/fumix/fx-mistral"
+keywords = ["OCR", "PDF", "Mistral"]
 categories = ["text-processing"]
 readme = "README.md"
 
