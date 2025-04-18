@@ -3,7 +3,7 @@ use dotenvy::dotenv;
 use std::error::Error;
 use serde::{Deserialize, Serialize};
 use fx_mistral::chat::ChatResponse;
-use fx_mistral::chat::messages::Messages;
+use fx_mistral::chat::chat_request::Messages;
 use fx_mistral::MistralClient;
 
 #[tokio::main]

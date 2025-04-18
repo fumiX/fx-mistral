@@ -25,7 +25,7 @@ impl MistralClient {
         files::FileClient::new(self)
     }
 
-    pub fn chat_client(&self, model: &str, temperature: f64) -> ChatClient {
+    pub fn chat_client(&self, model: &str, temperature: f32) -> ChatClient {
         ChatClient::new(self, model, temperature)
     }
 
