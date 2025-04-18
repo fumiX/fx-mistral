@@ -45,25 +45,10 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .build();
 
     // Send chat completion request
-    let chat_response = chat_client.chat_complete(&request).await?;
-    println!("Chat response: {:?}", chat_response);
-
-    let completion = chat_response.choices[0].message.content.clone();
-    let invoice_info = extract_invoice_info(&completion)?;
+    let invoice_info: InvoiceInfo = chat_client.chat_complete_struct(&request).await?;
     println!("Invoice Info: {:#?}", invoice_info);
 
     Ok(())
-}
-
-fn extract_invoice_info(completion: &str) -> Result<InvoiceInfo, Box<dyn Error>> {
-    let json_str = completion
-        .trim()
-        .trim_start_matches("```json")
-        .trim_end_matches("```")
-        .trim();
-
-    let invoice_info: InvoiceInfo = serde_json::from_str(json_str)?;
-    Ok(invoice_info)
 }
 
 fn example_invoice_date() -> String {

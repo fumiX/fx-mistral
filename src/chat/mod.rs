@@ -2,6 +2,7 @@ pub mod chat_request;
 
 use crate::chat::chat_request::ChatRequest;
 use crate::{MistralApiError, MistralClient, MistralError};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 
@@ -95,4 +96,30 @@ impl<'a> ChatClient<'a> {
         serde_json::from_str(&text).map_err(MistralError::Parse)
     }
 
+    pub async fn chat_complete_struct<T> (
+        &self,
+        request: &ChatRequest,
+    ) -> Result<T, MistralError>
+    where
+        T: DeserializeOwned,
+    {
+        let response = self.chat_complete(request).await?;
+        let content = response.choices[0].message.content.clone();
+        extract_struct_from_chat_response::<T>(&content)
+    }
+
+}
+
+
+pub fn extract_struct_from_chat_response<T>(content: &str) -> Result<T, MistralError>
+where
+    T: DeserializeOwned,
+{
+    let json_str = content
+        .trim()
+        .trim_start_matches("```json")
+        .trim_end_matches("```")
+        .trim();
+
+    serde_json::from_str(json_str).map_err(MistralError::Parse)
 }
