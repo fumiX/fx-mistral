@@ -4,10 +4,17 @@ use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::error::Error;
+use tracing::Level;
+use tracing_subscriber::fmt;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     dotenv().ok();
+
+    fmt::Subscriber::builder()
+        .with_ansi(true)
+        .with_max_level(Level::TRACE)
+        .init();
 
     let api_key = env::var("API_KEY")?;
     let base_url = "https://api.mistral.ai/v1";

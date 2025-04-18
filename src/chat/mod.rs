@@ -4,7 +4,7 @@ use crate::chat::chat_request::ChatRequest;
 use crate::{MistralApiError, MistralClient, MistralError};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-
+use tracing::{info, trace};
 
 //
 // Chat Response structs.
@@ -67,8 +67,8 @@ impl<'a> ChatClient<'a> {
     }
 
     pub async fn chat_complete(&self, request: &ChatRequest) -> Result<ChatResponse, MistralError> {
-
-        println!("Request body: {}", serde_json::to_string_pretty(request).unwrap_or("Can't serialize request".to_string()));
+        info!("Chat request to {:?}", request.model);
+        trace!("Request: {}", serde_json::to_string_pretty(request).unwrap_or("Can't serialize request".to_string()));
 
         let response = self
             .mistral_client
@@ -82,6 +82,7 @@ impl<'a> ChatClient<'a> {
 
         let status = response.status();
         let text = response.text().await.map_err(MistralError::Network)?;
+        trace!("Response: {}", text);
 
         if !status.is_success() {
             // Try to parse API error JSON
