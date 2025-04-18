@@ -1,10 +1,8 @@
 pub mod chat_request;
 
+use crate::chat::chat_request::ChatRequest;
+use crate::{MistralApiError, MistralClient, MistralError};
 use serde::{Deserialize, Serialize};
-use serde_json::to_string;
-use std::error::Error;
-use crate::chat::chat_request::{ChatRequest, Messages};
-use crate::MistralClient;
 
 
 //
@@ -67,11 +65,9 @@ impl<'a> ChatClient<'a> {
             .temperature(self.temperature)
     }
 
-    pub async fn chat_complete(&self, request: &ChatRequest) -> Result<ChatResponse, Box<dyn Error>> {
+    pub async fn chat_complete(&self, request: &ChatRequest) -> Result<ChatResponse, MistralError> {
 
-        let request_body = serde_json::to_string_pretty(request)?;
-
-        println!("Request body: {}", request_body);
+        println!("Request body: {}", serde_json::to_string_pretty(request).unwrap_or("Can't serialize request".to_string()));
 
         let response = self
             .mistral_client
@@ -80,13 +76,23 @@ impl<'a> ChatClient<'a> {
             .bearer_auth(&self.mistral_client.api_key)
             .json(request)
             .send()
-            .await?;
+            .await
+            .map_err(MistralError::Network)?;
 
-        let response_text = response.text().await?;
-        println!("Response body: {}", response_text);
+        let status = response.status();
+        let text = response.text().await.map_err(MistralError::Network)?;
 
-        let chat_response: ChatResponse = serde_json::from_str(&response_text)?;
-        Ok(chat_response)
+        if !status.is_success() {
+            // Try to parse API error JSON
+            let api_error: Result<MistralApiError, _> = serde_json::from_str(&text);
+            return match api_error {
+                Ok(err) => Err(MistralError::Api(err)),
+                Err(_) => Err(MistralError::Http(status)),
+            };
+        }
+
+        // Try to parse success response
+        serde_json::from_str(&text).map_err(MistralError::Parse)
     }
 
 }

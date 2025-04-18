@@ -45,7 +45,7 @@ pub enum Message {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
-enum Content {
+pub enum Content {
     #[serde(rename = "text")]
     Text { text: String },
     #[serde(rename = "document_url")]

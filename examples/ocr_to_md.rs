@@ -1,10 +1,7 @@
-use std::env;
 use dotenvy::dotenv;
-use std::error::Error;
-use serde::{Deserialize, Serialize};
-use fx_mistral::chat::ChatResponse;
-use fx_mistral::chat::chat_request::Messages;
 use fx_mistral::MistralClient;
+use std::env;
+use std::error::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -34,22 +31,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("OCR response: {:?}", ocr_response);
 
     Ok(())
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct InvoiceInfo {
-    invoice_number: String,
-    total_amount: String,
-    currency: String,
-    invoice_date: String,
-    issuer_name: String,
-}
-
-fn extract_invoice_info(completion: &str) -> Result<InvoiceInfo, Box<dyn Error>> {
-    // Remove the backticks and code block indicator
-    let json_str = completion.trim().trim_start_matches("```json").trim_end_matches("```").trim();
-
-    // Deserialize the JSON string
-    let invoice_info: InvoiceInfo = serde_json::from_str(json_str)?;
-    Ok(invoice_info)
 }

@@ -1,7 +1,7 @@
 use reqwest::multipart;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use crate::MistralClient;
+
+use crate::{MistralClient, MistralError, MistralApiError};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FileData {
@@ -21,7 +21,6 @@ pub struct SignedUrl {
     pub url: String,
 }
 
-
 pub struct FileClient<'a> {
     mistral_client: &'a MistralClient,
     files_path: String,
@@ -31,11 +30,11 @@ impl<'a> FileClient<'a> {
     pub fn new(mistral_client: &'a MistralClient) -> Self {
         FileClient {
             mistral_client,
-            files_path: "files".to_string()
+            files_path: "files".to_string(),
         }
     }
 
-    pub async fn upload_file(&self, file_data: Vec<u8>) -> Result<FileData, Box<dyn Error>> {
+    pub async fn upload_file(&self, file_data: Vec<u8>) -> Result<FileData, MistralError> {
         let part = multipart::Part::bytes(file_data).file_name("uploaded_file.pdf");
         let form = multipart::Form::new()
             .text("purpose", "ocr")
@@ -48,30 +47,53 @@ impl<'a> FileClient<'a> {
             .bearer_auth(&self.mistral_client.api_key)
             .multipart(form)
             .send()
-            .await?;
+            .await
+            .map_err(MistralError::Network)?;
 
-        let response_text = response.text().await?;
-        // println!("Response body: {}", response_text);
+        let status = response.status();
+        let response_text = response.text().await.map_err(MistralError::Network)?;
 
-        let file_data: FileData = serde_json::from_str(&response_text)?;
-        Ok(file_data)
+        if !status.is_success() {
+            return match serde_json::from_str::<MistralApiError>(&response_text) {
+                Ok(mut err) => {
+                    err.description = crate::error_description(err.code).to_string();
+                    Err(MistralError::Api(err))
+                },
+                Err(_) => Err(MistralError::Http(status)),
+            };
+        }
+
+        serde_json::from_str(&response_text).map_err(MistralError::Parse)
     }
 
-    pub async fn get_signed_url(&self, file_id: &str) -> Result<SignedUrl, Box<dyn Error>> {
-        let call_url = format!("{}/{}/{}/url?expiry=24", self.mistral_client.base_url, self.files_path, file_id);
-        // println!("Calling {}", call_url);
+    pub async fn get_signed_url(&self, file_id: &str) -> Result<SignedUrl, MistralError> {
+        let call_url = format!(
+            "{}/{}/{}/url?expiry=24",
+            self.mistral_client.base_url, self.files_path, file_id
+        );
+
         let response = self
             .mistral_client
             .client
             .get(call_url)
             .bearer_auth(&self.mistral_client.api_key)
             .send()
-            .await?;
+            .await
+            .map_err(MistralError::Network)?;
 
-        let response_text = response.text().await?;
-        // println!("Response body for url call: {}", response_text);
+        let status = response.status();
+        let response_text = response.text().await.map_err(MistralError::Network)?;
 
-        let signed_url: SignedUrl = serde_json::from_str(&response_text)?;
-        Ok(signed_url)
+        if !status.is_success() {
+            return match serde_json::from_str::<MistralApiError>(&response_text) {
+                Ok(mut err) => {
+                    err.description = crate::error_description(err.code).to_string();
+                    Err(MistralError::Api(err))
+                },
+                Err(_) => Err(MistralError::Http(status)),
+            };
+        }
+
+        serde_json::from_str(&response_text).map_err(MistralError::Parse)
     }
 }

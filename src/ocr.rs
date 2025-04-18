@@ -1,8 +1,7 @@
+use crate::MistralClient;
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt;
-use serde::{Deserialize, Serialize};
-use crate::files::FileClient;
-use crate::MistralClient;
 
 pub struct OcrClient<'a> {
     mistral_client: &'a MistralClient,
@@ -89,7 +88,7 @@ impl<'a> OcrClient<'a> {
     // Add methods for OCR operations here
     pub async fn get_ocr_results(&self, signed_url: &str) -> Result<OcrResponse, Box<dyn Error>> {
         let ocr_request = OcrRequest {
-            model: "mistral-ocr-latest".to_string(),
+            model: self.model.clone(),
             document: Document {
                 document_type: "document_url".to_string(),
                 document_url: signed_url.to_string(),
