@@ -1,6 +1,6 @@
 [package]
 name = "fx-mistral"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2024"
 authors = ["Michael Fuchs <michael.fuchs@fumix.de>"]
 description = "A library to leverage the Mistral API for OCR and data extraction from PDFs."
