@@ -5,7 +5,7 @@ use std::fmt;
 use std::error::Error;
 use serde::Deserialize;
 
-mod ocr;
+pub mod ocr;
 pub mod chat;
 pub mod files;
 

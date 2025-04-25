@@ -1,7 +1,6 @@
-use crate::MistralClient;
+use crate::{MistralApiError, MistralClient, MistralError};
+
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use std::fmt;
 
 pub struct OcrClient<'a> {
     mistral_client: &'a MistralClient,
@@ -29,52 +28,41 @@ struct Document {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OcrResponse {
-    pages: Vec<Page>,
-    model: String,
-    usage_info: UsageInfo,
+    pub pages: Vec<Page>,
+    pub model: String,
+    pub usage_info: UsageInfo,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Page {
-    index: u32,
-    markdown: String,
-    images: Vec<Image>,
-    dimensions: Dimensions,
+pub struct Page {
+    pub index: u32,
+    pub markdown: String,
+    pub images: Vec<Image>,
+    pub dimensions: Dimensions,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Image {
-    id: String,
-    top_left_x: u32,
-    top_left_y: u32,
-    bottom_right_x: u32,
-    bottom_right_y: u32,
-    image_base64: Option<String>,
+pub struct Image {
+    pub id: String,
+    pub top_left_x: u32,
+    pub top_left_y: u32,
+    pub bottom_right_x: u32,
+    pub bottom_right_y: u32,
+    pub image_base64: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Dimensions {
-    dpi: u32,
-    height: u32,
-    width: u32,
+pub struct Dimensions {
+    pub dpi: u32,
+    pub height: u32,
+    pub width: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct UsageInfo {
-    pages_processed: u32,
-    doc_size_bytes: u64,
+pub struct UsageInfo {
+    pub pages_processed: u32,
+    pub doc_size_bytes: u64,
 }
-
-#[derive(Debug)]
-struct ParseError;
-
-impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Failed to parse invoice information")
-    }
-}
-
-impl Error for ParseError {}
 
 impl<'a> OcrClient<'a> {
     pub fn new(mistral_client: &'a MistralClient, model: &str) -> Self {
@@ -85,8 +73,8 @@ impl<'a> OcrClient<'a> {
         }
     }
 
-    // Add methods for OCR operations here
-    pub async fn get_ocr_results(&self, signed_url: &str) -> Result<OcrResponse, Box<dyn Error>> {
+
+    pub async fn get_ocr_results(&self, signed_url: &str) -> Result<OcrResponse, MistralError> {
         let ocr_request = OcrRequest {
             model: self.model.clone(),
             document: Document {
@@ -96,29 +84,31 @@ impl<'a> OcrClient<'a> {
             include_image_base64: false,
         };
 
-        // Serialize the request body to JSON for debugging
-        let request_body = serde_json::to_string(&ocr_request)?;
-        println!("OCR Request body: {}", request_body);
-
-        // Build the request
-        let request = self
+        let response = self
             .mistral_client
             .client
             .post(&format!("{}/{}", self.mistral_client.base_url, self.ocr_path))
             .bearer_auth(&self.mistral_client.api_key)
             .json(&ocr_request)
-            .build()?;
+            .send()
+            .await
+            .map_err(MistralError::Network)?;
 
-        // Send the request
-        let response = self.mistral_client.client.execute(request).await?;
+        let status = response.status();
+        let response_text = response.text().await.map_err(MistralError::Network)?;
 
-        println!("Response status: {}", response.status());
+        if !status.is_success() {
+            return match serde_json::from_str::<MistralApiError>(&response_text) {
+                Ok(mut err) => {
+                    err.description = crate::error_description(err.code).to_string();
+                    Err(MistralError::Api(err))
+                },
+                Err(_) => Err(MistralError::Http(status)),
+            };
+        }
 
-        let response_text = response.text().await?;
-        println!("Response body: {}", response_text);
-
-        let ocr_response: OcrResponse = serde_json::from_str(&response_text)?;
-        Ok(ocr_response)
+        serde_json::from_str::<OcrResponse>(&response_text)
+            .map_err(MistralError::Parse)
     }
-
 }
+
