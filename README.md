@@ -16,44 +16,37 @@ information from documents.
 
 ## Example
 
-The following example demonstrates how to use the `fx-mistral` library to extract fields like invoice number, 
-total amount, tax, currency, invoice date, and issuer name from a German invoice.
+The following example demonstrates how to use the `fx-mistral` library to extract structured data like invoice number, 
+total amount, tax, currency, invoice date, and issuer name from German invoices.
 
-It uses 'mistral-small-latest' as model for the chat completion, which leads to a correct result on the given example
-invoice. The large model did not work well for this example.
+It uses 'mistral-small-latest' as the model for chat completion, which leads to correct results with the example invoice. 
+The large model did not work well for this example.
 
-It uses the following prompts for this. The prompts are in German to fit best to the example invoice, which is also
-in German.
+### System and User Prompts
+
+The library uses both a system prompt and a user prompt for extraction:
 
 - System prompt:
   ```text
-  Du bist ein KI-Assistent mit Dokumentenverständnis für Rechnungen und Belege über URLs. Du erhältst URLs von an 
-  Dich hochgeladenen Beleg-Dokumenten. Extrahiere die erforderlichen Informationen mit Hilfe von OCR und gib sie im 
-  folgenden JSON-Format zurück. Währungsbeträge mit Dezimalkomma und Datum im Iso-Format: 
-  {
-    "invoice_number": "", 
-    "total_amount": "", 
-    "tax": "", 
-    "currency": "", 
-    "invoice_date": "", 
-    "issuer_name": ""
-  }
+  Du bist ein KI-Assistent mit Dokumentenverständnis für Rechnungen und Belege über URLs.
+        Du erhältst URLs von an Dich hochgeladenen Beleg-Dokumenten. Extrahiere die erforderlichen Informationen
+        mit Hilfe von OCR und gib sie im JSON-Format zurück wie im JSON-Schema definiert.
   ```
-- User prompt (with URL to the uploaded PDF file):
+
+- User prompt:
   ```text
-  Extrahiere die folgenden Daten als Felder: * Rechnungsnummer: Rechnungsnummer, Belegnummer. * Gesamtbetrag/Summe: 
-  normalerweise als Summe, Total, Brutto, Zahlbetrag bezeichnet, der den tatsächlich in Rechnung gestellten Betrag 
-  einschließlich Steuern enthält. 
-  * Steuer: Mehrwertsteuer oder VAT als Betrag in der Währung. 
-  * Währung: als 'EUR' oder 'USD'. 
-  * Rechnungsdatum. Nur das Datum, ohne Uhrzeit. 
-  * Ausstellername: Das Unternehmen, das die Rechnung ausstellt. Das Rechnungsdokument wird als URL bereitgestellt. 
-  Das Rechnungsdokument wird als URL bereitgestellt. Beispiel einer Rechnung:
-    Rechnungsnummer: 12345
-    Summe: €100,00
-    Rechnungsdatum: 18.02.2025
-    Ausstellername: Beispiel GmbH
+  Extrahiere die Daten aus dem Dokument in das invoice_info.
   ```
+
+### JSON Schema for Structured Responses
+
+A key feature of the library is the use of JSON Schema to enforce structured responses.
+The library uses the response_format argument to send a JSON schema as string to 
+mistral to instruct it to produce a chat response in the required format.
+
+The library itself makes no assumption nor has dependencies to some JSON schema library, but the
+chat_extract example shows the use with `schemars` to demonstrate how to use annotations to a rust struct
+to produce a JSON schema with the instructions of how to fill the fields of the struct.
 
 ### .env
 
